@@ -1,0 +1,332 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
+// User Master Model
+model User {
+  user_id        String    @id @default(uuid()) @db.Uuid
+  user_name      String    @db.VarChar(255)
+  user_password  String    @db.VarChar(255)
+  is_active      Boolean   @default(true)
+  is_deleted     Boolean   @default(false)
+  is_approoved       Boolean   @default(false)
+  sync_date      DateTime? @db.Timestamptz(6)
+  created_date   DateTime  @default(now()) @db.Timestamptz(6)
+  modified_date  DateTime  @updatedAt @db.Timestamptz(6)
+  device_type    String?   @db.VarChar(100)
+  device_id      String?   @db.VarChar(255)
+
+  @@map("user_master")
+}
+
+model CompanyMaster {
+  companyId     String         @id @default(uuid()) @db.Uuid @map("company_id")
+  companyName   String?        @map("company_name")
+  companyShort  String?        @map("company_short")
+  companyAddr1  String?        @map("company_addr1")
+  companyAddr2  String?        @map("company_addr2")
+  companyAddr3  String?        @map("company_addr3")
+  companyMobile String?        @map("company_mobile")
+  companyEmail  String?        @map("company_email")
+  companyNotes  String?        @map("company_notes")
+
+  isActive      Boolean        @default(true)  @map("is_active")
+  isDeleted     Boolean        @default(false) @map("is_deleted")
+  isAppvd       Boolean        @default(false) @map("is_appvd")
+
+  syncDate      DateTime?      @db.Timestamptz(6) @map("sync_date")
+  createdDate   DateTime       @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate  DateTime       @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  branches      BranchMaster[]
+
+  @@map("company_master")
+}
+
+model BranchMaster {
+  branchCompId  String        @db.Uuid @map("branch_comp_id")
+  branchId      String        @id @default(uuid()) @db.Uuid @map("branch_id")
+
+  branchName    String?       @map("branch_name")
+  branchShort   String?       @map("branch_short")
+  branchAddr1   String?       @map("branch_addr1")
+  branchAddr2   String?       @map("branch_addr2")
+  branchAddr3   String?       @map("branch_addr3")
+  branchMobile  String?       @map("branch_mobile")
+  branchEmail   String?       @map("branch_email")
+  branchNotes   String?       @map("branch_notes")
+
+  isActive      Boolean       @default(true)  @map("is_active")
+  isDeleted     Boolean       @default(false) @map("is_deleted")
+  isAppvd       Boolean       @default(false) @map("is_appvd")
+
+  syncDate      DateTime?     @db.Timestamptz(6) @map("sync_date")
+  createdDate   DateTime      @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate  DateTime      @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  deviceType    String?       @map("device_type")
+  deviceId      String?       @map("device_id")
+
+  company       CompanyMaster @relation(fields: [branchCompId], references: [companyId])
+
+  @@index([branchCompId])
+  @@map("branch_master")
+}
+
+model LoanCompany {
+  loanCompId     String   @id @default(uuid()) @db.Uuid @map("loan_comp_id")
+  loanCompName   String?  @map("loan_comp_name")
+  loanCompShort  String?  @map("loan_comp_short")
+  loanCompNotes  String?  @map("loan_comp_notes")
+
+  isActive       Boolean  @default(true)  @map("is_active")
+  isDeleted      Boolean  @default(false) @map("is_deleted")
+  isAppvd        Boolean  @default(false) @map("is_appvd")
+
+  syncDate       DateTime? @db.Timestamptz(6) @map("sync_date")
+  createdDate    DateTime  @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate   DateTime  @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  deviceType     String?  @map("device_type")
+  deviceId       String?  @map("device_id")
+
+  ledgers        Ledger[]
+  billings       BillingTxn[]
+
+  @@map("loan_companies")
+}
+
+model LedgerGroup {
+  groupId      String   @id @default(uuid()) @db.Uuid @map("group_id")
+  groupName    String?  @map("group_name")
+  groupType    String?  @map("group_type") // Cash / Bank / Agent etc.
+
+  isActive     Boolean  @default(true)  @map("is_active")
+  isDeleted    Boolean  @default(false) @map("is_deleted")
+  isAppvd      Boolean  @default(false) @map("is_appvd")
+
+  syncDate     DateTime? @db.Timestamptz(6) @map("sync_date")
+  createdDate  DateTime  @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate DateTime  @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  ledgers      Ledger[]
+
+  @@map("ledger_group_master")
+}
+
+model Ledger {
+  ledgerId         String      @id @default(uuid()) @db.Uuid @map("ledger_id")
+  ledgerGroupId    String      @db.Uuid @map("ledger_group_id")
+  ledgerLoanCompId String?     @db.Uuid @map("ledger_loan_comp_id")
+
+  ledgerName       String?     @map("ledger_name")
+  ledgerAddr1      String?     @map("ledger_addr1")
+  ledgerAddr2      String?     @map("ledger_addr2")
+  ledgerAddr3      String?     @map("ledger_addr3")
+  ledgerMobile     String?     @map("ledger_mobile")
+  ledgerWapp       String?     @map("ledger_wapp")
+
+  isActive         Boolean     @default(true)  @map("is_active")
+  isDeleted        Boolean     @default(false) @map("is_deleted")
+  isAppvd          Boolean     @default(false) @map("is_appvd")
+
+  syncDate         DateTime?   @db.Timestamptz(6) @map("sync_date")
+  createdDate      DateTime    @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate     DateTime    @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  deviceType       String?     @map("device_type")
+  deviceId         String?     @map("device_id")
+
+  group            LedgerGroup @relation(fields: [ledgerGroupId], references: [groupId])
+  loanCompany      LoanCompany? @relation(fields: [ledgerLoanCompId], references: [loanCompId])
+
+  // Voucher / Ledger transactions reference "from" and "to" as ledger ids
+  vouchersFrom     VoucherTxn[] @relation("VoucherFrom")
+  vouchersTo       VoucherTxn[] @relation("VoucherTo")
+
+  ledgerTxnsFrom   LedgerTxn[]  @relation("LedgerTxnFrom")
+  ledgerTxnsTo     LedgerTxn[]  @relation("LedgerTxnTo")
+
+  billedIn         BillingTxn[] @relation("BilledLedger")
+
+  @@index([ledgerGroupId])
+  @@index([ledgerLoanCompId])
+  @@map("ledger_master")
+}
+
+model Denom {
+  denomId       Int       @id @map("denom_id")
+  denomValue    String?   @map("denom_value")
+  denomPosition Int?      @map("denom_position")
+  denomCount    BigInt?   @map("denom_count")
+  denomActive   Boolean   @default(true) @map("denom_active")
+  isAppvd       Boolean   @default(false) @map("is_appvd")
+
+  syncDate      DateTime? @db.Timestamptz(6) @map("sync_date")
+  createdDate   DateTime  @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate  DateTime  @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  deviceType    String?   @map("device_type")
+  deviceId      String?   @map("device_id")
+
+  denomTxns     DenomTxn[]
+
+  @@map("denom_master")
+}
+
+model VoucherType {
+  typeId       Int       @id @map("type_id")
+  typeName     String?   @map("type_name")
+  isActive     Boolean   @default(true) @map("is_active")
+
+  syncDate     DateTime? @db.Timestamptz(6) @map("sync_date")
+  createdDate  DateTime  @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate DateTime  @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  vouchers     VoucherTxn[]
+  ledgerTxns   LedgerTxn[]
+  denomTxns    DenomTxn[]
+
+  @@map("voucher_types")
+}
+
+
+model VoucherTxn {
+  vchrTxnId     String       @id @default(uuid()) @db.Uuid @map("vchr_txn_id")
+  vchrTxnDate   DateTime?    @db.Timestamptz(6) @map("vchr_txn_date")
+  vchrTxnType   Int?         @map("vchr_txn_type")
+
+  vchrTxnFromId String?      @db.Uuid @map("vchr_txn_from_id")
+  vchrTxnToId   String?      @db.Uuid @map("vchr_txn_to_id")
+
+  vchrTxnAmount Decimal?     @db.Decimal(18, 2) @map("vchr_txn_amount")
+  vchrTxnNotes  String?      @map("vchr_txn_notes")
+
+  isActive      Boolean      @default(true)  @map("is_active")
+  isDeleted     Boolean      @default(false) @map("is_deleted")
+  isAppvd       Boolean      @default(false) @map("is_appvd")
+
+  syncDate      DateTime?    @db.Timestamptz(6) @map("sync_date")
+  createdDate   DateTime     @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate  DateTime     @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  deviceType    String?      @map("device_type")
+  deviceId      String?      @map("device_id")
+
+  type          VoucherType? @relation(fields: [vchrTxnType], references: [typeId])
+
+  fromLedger    Ledger?      @relation("VoucherFrom", fields: [vchrTxnFromId], references: [ledgerId])
+  toLedger      Ledger?      @relation("VoucherTo",   fields: [vchrTxnToId],   references: [ledgerId])
+
+  ledgerTxns    LedgerTxn[]
+  denomTxns     DenomTxn[]
+
+  @@index([vchrTxnType])
+  @@index([vchrTxnFromId])
+  @@index([vchrTxnToId])
+  @@map("voucher_txn")
+}
+
+model LedgerTxn {
+  lgrTxnId      String      @id @default(uuid()) @db.Uuid @map("lgr_txn_id")
+  lgrVchrTxnId  String?     @db.Uuid @map("lgr_vchr_txn_id")
+
+  lgrTxnDate    DateTime?   @db.Timestamptz(6) @map("lgr_txn_date")
+  lgrTxnType    Int?        @map("lgr_txn_type")
+
+  lgrFromId     String?     @db.Uuid @map("lgr_from_id")
+  lgrToId       String?     @db.Uuid @map("lgr_to_id")
+
+  lgrTxnAmt     Decimal?    @db.Decimal(18, 2) @map("lgr_txn_amt")
+  lgrTxnCrdr    String?     @map("lgr_txn_crdr")
+  lgrTxnNotes   String?     @map("lgr_txn_notes")
+
+  isActive      Boolean     @default(true)  @map("is_active")
+  isDeleted     Boolean     @default(false) @map("is_deleted")
+  isAppvd       Boolean     @default(false) @map("is_appvd")
+
+  syncDate      DateTime?   @db.Timestamptz(6) @map("sync_date")
+  createdDate   DateTime    @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate  DateTime    @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  voucher       VoucherTxn? @relation(fields: [lgrVchrTxnId], references: [vchrTxnId])
+  type          VoucherType? @relation(fields: [lgrTxnType], references: [typeId])
+
+  fromLedger    Ledger?     @relation("LedgerTxnFrom", fields: [lgrFromId], references: [ledgerId])
+  toLedger      Ledger?     @relation("LedgerTxnTo",   fields: [lgrToId],   references: [ledgerId])
+
+  @@index([lgrVchrTxnId])
+  @@index([lgrTxnType])
+  @@index([lgrFromId])
+  @@index([lgrToId])
+  @@map("ledger_txn")
+}
+
+model DenomTxn {
+  denomTxnId    String      @id @default(uuid()) @db.Uuid @map("denom_txn_id")
+
+  vchrTxnId     String?     @db.Uuid @map("vchr_txn_id")
+  vchrTxnType   Int?        @map("vchr_txn_type")
+
+  denomId       Int?        @map("denom_id")
+  denomCount    Int?        @map("denom_count")
+  denomValue    Decimal?    @db.Decimal(18, 2) @map("denom_value")
+
+  isActive      Boolean     @default(true)  @map("is_active")
+  isDeleted     Boolean     @default(false) @map("is_deleted")
+  isAppvd       Boolean     @default(false) @map("is_appvd")
+
+  syncDate      DateTime?   @db.Timestamptz(6) @map("sync_date")
+  createdDate   DateTime    @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate  DateTime    @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  voucher       VoucherTxn?  @relation(fields: [vchrTxnId], references: [vchrTxnId])
+  type          VoucherType? @relation(fields: [vchrTxnType], references: [typeId])
+  denom         Denom?       @relation(fields: [denomId], references: [denomId])
+
+  @@index([vchrTxnId])
+  @@index([vchrTxnType])
+  @@index([denomId])
+  @@map("denom_txn")
+}
+
+model BillingTxn {
+  billId        String     @id @default(uuid()) @db.Uuid @map("bill_id")
+  billDate      DateTime?  @db.Timestamptz(6) @map("bill_date")
+
+  userId        String?    @db.Uuid @map("user_id")
+  agentId       String?    @db.Uuid @map("agent_id")
+  agentMode     String?    @map("agent_mode") // "Agent Mode" / "Customer Mode"
+
+  loanCompId    String?    @db.Uuid @map("loan_comp_id")
+  paymentMode   String?    @map("payment_mode") // Cash / Bank / Third party
+
+  billedLedgerId String?   @db.Uuid @map("billed_ledger_id")
+
+  billAmount    Decimal?   @db.Decimal(18, 2) @map("bill_amount")
+  creditAmt     Decimal?   @db.Decimal(18, 2) @map("credit_amt")
+  billNotes     String?    @map("bill_notes")
+
+  isActive      Boolean    @default(true)  @map("is_active")
+  isDeleted     Boolean    @default(false) @map("is_deleted")
+  isAppvd       Boolean    @default(false) @map("is_appvd")
+
+  syncDate      DateTime?  @db.Timestamptz(6) @map("sync_date")
+  createdDate   DateTime   @default(now())    @db.Timestamptz(6) @map("created_date")
+  modifiedDate  DateTime   @updatedAt         @db.Timestamptz(6) @map("modified_date")
+
+  loanCompany   LoanCompany? @relation(fields: [loanCompId], references: [loanCompId])
+  billedLedger  Ledger?      @relation("BilledLedger", fields: [billedLedgerId], references: [ledgerId])
+
+  @@index([loanCompId])
+  @@index([billedLedgerId])
+  @@map("billing_txn")
+}
